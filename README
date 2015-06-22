@@ -3,35 +3,36 @@ Courtney Napoles <courtneyn@jhu.edu>
 
 --
 
-
 This README describes how to reproduce the results in our ACL 2015 paper,
 
              Ground Truth for Grammatical Error Correction Metrics
        Courtney Napoles, Keisuke Sakaguchi, Joel Tetreault, and Matt Post
 
-The data and code will also be available on github 
+The data (all_judgments.csv) and code will also be available on github 
 (https://github.com/cnap/gec-ranking). 
 
 --
 
 Instructions:
 
-1. Data
+1. Obtain the raw system output
 
 The rankings found in the gec-ranking-data correspond to the 12 system outputs
 from the CoNLL-14 Shared Task on Grammatical Error Correction, which can be 
 downloaded from <http://www.comp.nus.edu.sg/~nlp/conll14st.html>.
 
+Human judgments are located in gec-ranking/data.
+
 2. Run TrueSkill
 
 To get the human rankings, run TrueSkill (which can be downloaded from
-<https://github.com/keisks/wmt-trueskill>) on the human judgments csv file 
-(located in gec-ranking/data).
+<https://github.com/keisks/wmt-trueskill>) on all_judgments.csv, following
+the instructions in the TrueSkill readme.
 
-3. Metric scores
+3. Calculate metric scores
 
-   (a) GLEU is included in this directory. To obtain the GLEU scores for system
-   output, run the following command:
+   (a) GLEU is included in gec-ranking/scripts. To obtain the GLEU scores for 
+   system output, run the following command:
 
    ./compute_gleu -s source_sentences -r reference [reference ...] \
 		  -o system_output [system_output ...] -n 4 -l 0.0
