@@ -1,0 +1,64 @@
+#!/usr/bin/env python
+
+# Courtney Napoles
+# <courtneyn@jhu.edu>
+# 21 June 2015
+# ##
+# compute_gleu
+# 
+# This script calls gleu.py to calculate the GLEU score of a sentence, as 
+# described in our ACL 2015 paper, Ground Truth for Grammatical Error 
+# Correction Metrics by Courtney Napoles, Keisuke Sakaguchi, Matt Post, 
+# and Joel Tetreault.
+# 
+# For instructions on how to get the GLEU score, call "compute_gleu -h"
+#
+# This script was adapted from compute-bleu by Adam Lopez.
+# <https://github.com/alopez/en600.468/blob/master/reranker/>
+
+import argparse
+import sys
+import gleu
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-r", "--reference", 
+                    help="Target language reference sentences. Multiple files for "
+                    " multiple references.",
+                    nargs="*",
+                    dest="reference",
+                    default="data/dev.ref") 
+parser.add_argument("-s", "--source",
+                    help="Source language source sentences",
+                    dest="source", 
+                    default="data/dev.src")
+parser.add_argument("-o", "--hypothesis", 
+                    help="Target language hypothesis sentences to evaluate (can "
+                    "be more than one file--the GLEU score of each file will be) "
+                    "output separately.",
+                    nargs="*", 
+                    dest="hypothesis", 
+                    default="data/dev.hyp")
+parser.add_argument("-n",
+                    help="Maximum order of ngrams",
+                    type=int,
+                    default=4)
+parser.add_argument("-l",
+                    help="Weight for penalizing incorrectly unchanged n-grams",
+                    type=float,
+                    default=0.0)
+args = parser.parse_args()
+
+for hyp_file in args.hypothesis :
+    hyp = [line.split() for line in open(hyp_file)]
+    src = [line.split() for line in open(args.source)]
+    ref = [ [] for i in range(len(hyp)) ]
+    for r in args.reference :
+        i = 0
+        for line in open(r) :
+            ref[i].append(line.split())
+            i+=1
+
+    stats = [0 for i in xrange(2*args.n+2)]
+    for (r,h,s) in zip(ref, hyp,src):
+        stats = [sum(scores) for scores in zip(stats, gleu.gleu_stats(h,r,s,args.n,args.l))]
+    print hyp_file.rsplit('/',1)[1],gleu.gleu(stats)
