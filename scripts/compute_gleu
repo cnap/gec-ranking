@@ -53,21 +53,17 @@ if __name__ == '__main__' :
                         help="Debug; print sentence-level scores",
                         default=False,
                         action="store_true")
-    parser.add_argument('-version',default=0.
+    parser.add_argument('--version',default=0,
                         type=int,
                         help='which version of GLEU to use.'
                         '\t0: (R^H-S\R^H)/(R^H)\n'
                         '\t1: (R^H-S\R^H)/(R^H) randomly sampled 1k times, using one randomly selected reference each time\n'
                         '\t2: (R^H-S\R_w^H)/(R^H), where R_w is the normalized count\n'
-                        '\t3: (R_w\S^H+R^H-S\R_w^H)/(R^H), where R_w is the normalized count\n'
-    parser.add_argument('--randsamp',default=False,
-                        action='store_true',
-                        help='randomly sample a reference for each sentence, and repeat 1,000 times')
+                        '\t3: (R_w\S^H+R^H-S\R_w^H)/(R^H), where R_w is the normalized count\n')
     
     args = parser.parse_args()
 
-    num_iterations = 1000 if args.randsamp else 1
-    version = 1 if args.randsamp else 0
+    num_iterations = 100 if args.version == 1 else 1
     
     gleu_calculator = GLEU(args.n,args.l)
 
@@ -78,23 +74,23 @@ if __name__ == '__main__' :
         instream = sys.stdin if hpath == '-' else open(hpath)
         hyp = [line.split() for line in instream]
 
-        for l in args.l :
-            l = float(l)
-            gleu_calculator.set_lambda(l)
-            print os.path.basename(hpath),l,
+        print os.path.basename(hpath),args.version,
 
-            if args.debug :
-                print
-                print '===== Sentence-level scores ====='
-                print 'SID\tGLEU'
-                
-            stats = [0 for i in xrange(2*args.n+2)]
+        if args.debug :
+            print
+            print '===== Sentence-level scores ====='
+            print 'SID\tGLEU'
+
+        stats = [0 for i in xrange(2*args.n+2)]
+        for j in range(num_iterations) :
             for i,h in enumerate(hyp):
-                for i in range(num_iterations) :
-                    this_stats = [ s for s in gleu_calculator.gleu_stats(h,i,version=version) ]
-                    if args.debug :
-                        print '%d\t%f'%(i,gleu_calculator.gleu(this_stats))
-                        stats = [sum(scores) for scores in zip(stats, this_stats)]
+                this_stats = [ s for s in gleu_calculator.gleu_stats(h,i,version=args.version) ]
+                if args.debug :
+                    #print this_stats
+                    print '%d\t%f'%(i,gleu_calculator.gleu(this_stats))
+                stats = [sum(scores) for scores in zip(stats, this_stats)]
             if args.debug :
-                print '\n==== Overall score ====='
-            print gleu_calculator.gleu(stats)
+                print'iter',j,'gleu=',gleu_calculator.gleu(stats)
+        if args.debug :
+            print '\n==== Overall score ====='
+        print gleu_calculator.gleu(stats)

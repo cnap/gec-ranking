@@ -76,7 +76,7 @@ class GLEU :
         self.weight = l
 
     def normalization(self,ngram,n) :
-        return 1.0*self.all_rngrams_freq[n-1][k]/len(self.rlens[0])
+        return 1.0*self.all_rngrams_freq[n-1][ngram]/len(self.rlens[0])
     
     # Collect BLEU-relevant statistics for a single hypothesis/reference pair.
     # Return value is a generator yielding:
@@ -99,7 +99,7 @@ class GLEU :
       j = None
 
       if version == 1 :
-          j = random.randint(0,len(self.rlens[i]))
+          j = random.randint(0,len(self.rlens[i])-1)
 
       for n in xrange(1,self.order+1):
         h_ngrams = self.get_ngram_counts(hypothesis,n)
@@ -120,9 +120,15 @@ class GLEU :
         if version >= 3 :
             for k in (set(h_ngrams) & set(r_ngrams)) - set(s_ngrams) :
                 r_and_h_not_s += self.normalization(k,n)
-        
+
+        #print 'H',len(h_ngrams),h_ngrams
+        #print 'R',len(r_ngrams),r_ngrams
+        #print 'S',len(s_ngrams),s_ngrams
+        #print 'max [',r_and_h_not_s,'+',sum( (h_ngrams & r_ngrams).values() ),'-',sum( (h_ngrams & s_ngram_diff).values() ),',0 ]',
+        #print '/ max [',r_and_h_not_s,'+',hlen+1-n,',0 ]'
         yield max([ r_and_h_not_s + sum( (h_ngrams & r_ngrams).values() ) - \
                     sum( (h_ngrams & s_ngram_diff).values() ), 0 ])
+        
         
         yield max([r_and_h_not_s + hlen+1-n, 0])
 
@@ -132,5 +138,4 @@ class GLEU :
          return 0
        (c, r) = stats[:2]
        log_gleu_prec = sum([math.log(float(x)/y) for x,y in zip(stats[2::2],stats[3::2])]) / 4.
-
        return math.exp(min([0, 1-float(r)/c]) + log_gleu_prec)
