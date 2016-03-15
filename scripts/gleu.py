@@ -17,6 +17,9 @@
 
 import math
 from collections import Counter
+import random
+
+random.seed(9919)
 
 class GLEU :
 
@@ -30,21 +33,28 @@ class GLEU :
                                 for line in open(spath) ]
         
     def load_references(self,rpaths) :
-        refs = [ [] for i in range(len(self.all_s_ngrams)) ]
+        self.refs = [ [] for i in range(len(self.all_s_ngrams)) ]
         self.rlens = [ [] for i in range(len(self.all_s_ngrams)) ]
         for rpath in rpaths :
             for i,line in enumerate(open(rpath)) :
-                refs[i].append(line.split())
+                self.refs[i].append(line.split())
                 self.rlens[i].append(len(line.split()))
-                
+
+        # count number of references each n-gram appear sin
+        self.all_rngrams_freq = [ Counter() for i in range(self.order) ]
+        
         self.all_r_ngrams = [ ]
-        for refset in refs :
+        for refset in self.refs :
             all_ngrams = []
             self.all_r_ngrams.append(all_ngrams)
             
             for n in range(1,self.order+1) :
                 ngrams = self.get_ngram_counts(refset[0],n)
                 all_ngrams.append(ngrams)
+                
+                for k in ngrams.keys() :
+                    self.all_rngrams_freq[n-1][k]+=1
+                
                 for ref in refset[1:] :
                     new_ngrams = self.get_ngram_counts(ref,n)
                     for nn in new_ngrams.elements() :
@@ -55,15 +65,25 @@ class GLEU :
     def get_ngram_counts(self,sentence,n) :
         return Counter([tuple(sentence[i:i+n]) for i in xrange(len(sentence)+1-n)])
 
+    # returns ngrams in a but not in b    
+    def get_ngram_diff(self,a,b) :
+        diff = Counter(a)
+        for k in (set(a) & set(b)) :
+            del diff[k]
+        return diff
+
     def set_lambda(self,l) :
         self.weight = l
-        
+
+    def normalization(self,ngram,n) :
+        return 1.0*self.all_rngrams_freq[n-1][k]/len(self.rlens[0])
+    
     # Collect BLEU-relevant statistics for a single hypothesis/reference pair.
     # Return value is a generator yielding:
     # (c, r, numerator1, denominator1, ... numerator4, denominator4)
     # Summing the columns across calls to this function on an entire corpus will
     # produce a vector of statistics that can be used to compute BLEU or GLEU
-    def gleu_stats(self,hypothesis, i):
+    def gleu_stats(self,hypothesis, i,version=0):
 
       hlen=len(hypothesis)
       rlen = self.rlens[i][0]
@@ -76,31 +96,35 @@ class GLEU :
       yield rlen
       yield hlen
 
+      j = None
+
+      if version == 1 :
+          j = random.randint(0,len(self.rlens[i]))
+
       for n in xrange(1,self.order+1):
         h_ngrams = self.get_ngram_counts(hypothesis,n)
         s_ngrams = self.all_s_ngrams[i][n-1]
         r_ngrams = self.all_r_ngrams[i][n-1]
 
-        r_ngram_diff = r_ngrams - s_ngrams
-        # some n-grams may appear in both sets but have a higher count in the subtracted
-        # one so these n-grams should be deleted so a single occurrence of one of those 
-        # n-grams doesn't penalize the precision
-        for k in r_ngram_diff.keys() :
-            if k in s_ngrams :
-                del r_ngram_diff[k]
-        s_ngram_diff = s_ngrams - r_ngrams
-        for k in s_ngram_diff.keys() :
-            if k in r_ngrams :
-                del s_ngram_diff[k]
+        if version == 1 :
+            r_ngrams = self.get_ngram_counts(self.refs[i][j],n)
 
-        yield sum( (h_ngrams & r_ngram_diff).values() ) + \
-            max([ sum( (h_ngrams & r_ngrams).values() ) - \
-                  self.weight * sum( (h_ngrams & s_ngram_diff).values() ), 0 ])
+        s_ngram_diff = self.get_ngram_diff(s_ngrams,r_ngrams)
+        if version >= 2 :
+            s_ngram_diff = Counter()
+            for k in s_ngrams :
+                if k in r_ngrams :
+                    s_ngram_diff[k] = max([0,s_ngrams[k]-r_ngrams[k]*self.normalization(k,n)])
+
+        r_and_h_not_s = 0
+        if version >= 3 :
+            for k in (set(h_ngrams) & set(r_ngrams)) - set(s_ngrams) :
+                r_and_h_not_s += self.normalization(k,n)
         
-        yield sum( (h_ngrams & r_ngram_diff).values() ) + max([hlen+1-n, 0])
-
-        ## here is the original, erroneous way to calculate the denominator
-        #yield max([sum(r_ngram_diff.values()), 0]) + max([hlen+1-n, 0]) 
+        yield max([ r_and_h_not_s + sum( (h_ngrams & r_ngrams).values() ) - \
+                    sum( (h_ngrams & s_ngram_diff).values() ), 0 ])
+        
+        yield max([r_and_h_not_s + hlen+1-n, 0])
 
     # Compute GLEU from collected statistics obtained by call(s) to gleu_stats
     def gleu(self,stats):
