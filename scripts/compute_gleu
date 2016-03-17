@@ -20,6 +20,8 @@ import argparse
 import sys
 import os
 from gleu import GLEU
+import scipy.stats
+import numpy as np
 
 if __name__ == '__main__' :
     
@@ -63,7 +65,7 @@ if __name__ == '__main__' :
     
     args = parser.parse_args()
 
-    num_iterations = 100 if args.version == 1 else 1
+    num_iterations = 500 if args.version == 1 else 1
     
     gleu_calculator = GLEU(args.n,args.l)
 
@@ -82,15 +84,29 @@ if __name__ == '__main__' :
             print 'SID\tGLEU'
 
         stats = [0 for i in xrange(2*args.n+2)]
+        sent_scores = []
         for j in range(num_iterations) :
+            if j % 10 == 0 :
+                print >>sys.stderr,'.',
             for i,h in enumerate(hyp):
                 this_stats = [ s for s in gleu_calculator.gleu_stats(h,i,version=args.version) ]
                 if args.debug :
                     #print this_stats
                     print '%d\t%f'%(i,gleu_calculator.gleu(this_stats))
                 stats = [sum(scores) for scores in zip(stats, this_stats)]
+                sent_scores.append(gleu_calculator.gleu(this_stats))
             if args.debug :
                 print'iter',j,'gleu=',gleu_calculator.gleu(stats)
         if args.debug :
             print '\n==== Overall score ====='
-        print gleu_calculator.gleu(stats)
+        gleu_score = gleu_calculator.gleu(stats)
+        mean = np.mean(sent_scores)
+        std = np.std(sent_scores)
+        print >>sys.stderr,''
+        
+        print gleu_score,
+        if args.version == 1 :
+            ci = scipy.stats.norm.interval(0.05,loc=mean,scale=std)
+            print 'Mean=%.3f'%mean,'Std=%.3f'%std,'95% confidence interval is','(%.3f,%.3f)'%(ci[0],ci[1])
+        else :
+            print ''

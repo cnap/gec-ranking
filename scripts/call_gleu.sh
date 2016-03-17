@@ -4,8 +4,10 @@ mydir="$HOME/research/gec/gec-annotations/data/no_merge"
 files="$mydir/N
 $mydir/expert_fluency 
 $mydir/A
-$mydir/[ANTe]
-$mydir/expert_min"
+$mydir/[ANte]
+$mydir/expert_min
+$mydir/turker_min
+$mydir/turker_fluency"
 
 for i in 0 1 2 3; do
     for f in $files; do
