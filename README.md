@@ -53,7 +53,13 @@ correction*. The I-measure scorer can be downloaded from
 <https://github.com/mfelice/imeasure>.
 
 M2 scores were calculated using the official scorer (3.2) of the CoNLL-2014 Shared Task (<http://www.comp.nus.edu.sg/~nlp/sw/>).
+--
+# Update, 17 March 2016
+
+There was an error in the calculation of the GLEU denominator, which was corrected in the 10 March 2016 commit.
+Since then, we have identified a problem with the GLEU metric as the number of references increases. We are currently addressing this issue and will post a thorough explanation as well as revised results from our ACL 2015 paper.
+
 
 --
 Courtney Napoles,  <courtneyn@jhu.edu>  
-21 June 2015
+21 June 2015, updated 17 March 2016
