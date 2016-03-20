@@ -6,7 +6,7 @@
 # ##
 # compute_gleu
 # 
-# This script calls gleu.py to calculate the GLEU score of a sentence, as 
+# This script calls gleu.py to calculate the GLEU score of a sentence, as
 # described in our ACL 2015 paper, Ground Truth for Grammatical Error 
 # Correction Metrics by Courtney Napoles, Keisuke Sakaguchi, Matt Post, 
 # and Joel Tetreault.
@@ -27,47 +27,45 @@ if __name__ == '__main__' :
     
     parser = argparse.ArgumentParser()
     parser.add_argument("-r", "--reference", 
-                        help="Target language reference sentences. Multiple files for "
-                        " multiple references.",
+                        help="Target language reference sentences. Multiple "
+                        "files for multiple references.",
                         nargs="*",
                         dest="reference",
-                        default=["data/dev.ref"]) 
+                        required=True) 
     parser.add_argument("-s", "--source",
                         help="Source language source sentences",
                         dest="source", 
-                        default="data/dev.src")
+                        required=True) 
     parser.add_argument("-o", "--hypothesis", 
-                        help="Target language hypothesis sentences to evaluate (can "
-                        "be more than one file--the GLEU score of each file will be) "
-                        "output separately. Use '-o -' to read hypotheses from stdin.",
+                        help="Target language hypothesis sentences to evaluate "
+                        "(can be more than one file--the GLEU score of each "
+                        "file will be output separately). Use '-o -' to read "
+                        "hypotheses from stdin.",
                         nargs="*", 
                         dest="hypothesis", 
-                        default=["data/dev.hyp"])
+                        required=True)
     parser.add_argument("-n",
                         help="Maximum order of ngrams",
                         type=int,
                         default=4)
-    parser.add_argument("-l",
-                        help="Lambda weight for penalizing incorrectly unchanged n-grams",
-                        nargs='*',
-                        default=[0])
     parser.add_argument("-d","--debug",
                         help="Debug; print sentence-level scores",
                         default=False,
                         action="store_true")
-    parser.add_argument('--version',default=0,
+    parser.add_argument('v','--version',
                         type=int,
+                        default=1,
                         help='which version of GLEU to use.'
-                        '\t0: (R^H-S\R^H)/(R^H)\n'
-                        '\t1: (R^H-S\R^H)/(R^H) randomly sampled 1k times, using one randomly selected reference each time\n'
-                        '\t2: (R^H-S\R_w^H)/(R^H), where R_w is the normalized count\n'
-                        '\t3: (R_w\S^H+R^H-S\R_w^H)/(R^H), where R_w is the normalized count\n')
+                        '\t1: (R^H-S\R^H)/(R^H) randomly sampled 500 times, '
+                        'using one randomly selected reference each time\n'
+                        '\t2: (R^H-S\R_w^H)/(R^H), where R_w is the normalized '
+                        'count\n')
     
     args = parser.parse_args()
 
     num_iterations = 500 if args.version == 1 else 1
     
-    gleu_calculator = GLEU(args.n,args.l)
+    gleu_calculator = GLEU(args.n)
 
     gleu_calculator.load_sources(args.source)
     gleu_calculator.load_references(args.reference)
@@ -89,14 +87,14 @@ if __name__ == '__main__' :
             if j % 10 == 0 :
                 print >>sys.stderr,'.',
             for i,h in enumerate(hyp):
-                this_stats = [ s for s in gleu_calculator.gleu_stats(h,i,version=args.version) ]
+                this_stats = [ s for s in gleu_calculator.gleu_stats(
+                    h,i,version=args.version) ]
                 if args.debug :
                     #print this_stats
                     print '%d\t%f'%(i,gleu_calculator.gleu(this_stats))
                 stats = [sum(scores) for scores in zip(stats, this_stats)]
                 sent_scores.append(gleu_calculator.gleu(this_stats))
-            if args.debug :
-                print'iter',j,'gleu=',gleu_calculator.gleu(stats)
+
         if args.debug :
             print '\n==== Overall score ====='
         gleu_score = gleu_calculator.gleu(stats)
@@ -107,6 +105,7 @@ if __name__ == '__main__' :
         print gleu_score,
         if args.version == 1 :
             ci = scipy.stats.norm.interval(0.05,loc=mean,scale=std)
-            print 'Mean=%.3f'%mean,'Std=%.3f'%std,'95% confidence interval is','(%.3f,%.3f)'%(ci[0],ci[1])
+            print 'Mean=%.3f'%mean,'Std=%.3f'%std,
+            print '95% confidence interval is (%.3f,%.3f)'%(ci[0],ci[1])
         else :
-            print ''
+            print

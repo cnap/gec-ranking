@@ -23,14 +23,13 @@ random.seed(9919)
 
 class GLEU :
 
-    def __init__(self,n=4,l=1) :
+    def __init__(self,n=4) :
         self.order = 4
-        self.weight = l
 
     def load_sources(self,spath) :
-        self.all_s_ngrams = [ [ self.get_ngram_counts(line.split(),n) \
-                                  for n in range(1,self.order+1) ] \
-                                for line in open(spath) ]
+        self.all_s_ngrams = [ [ self.get_ngram_counts(line.split(),n)
+                                for n in range(1,self.order+1) ]
+                              for line in open(spath) ]
         
     def load_references(self,rpaths) :
         self.refs = [ [] for i in range(len(self.all_s_ngrams)) ]
@@ -63,7 +62,8 @@ class GLEU :
 
         
     def get_ngram_counts(self,sentence,n) :
-        return Counter([tuple(sentence[i:i+n]) for i in xrange(len(sentence)+1-n)])
+        return Counter([tuple(sentence[i:i+n])
+                        for i in xrange(len(sentence)+1-n)])
 
     # returns ngrams in a but not in b    
     def get_ngram_diff(self,a,b) :
@@ -72,23 +72,21 @@ class GLEU :
             del diff[k]
         return diff
 
-    def set_lambda(self,l) :
-        self.weight = l
-
     def normalization(self,ngram,n) :
         return 1.0*self.all_rngrams_freq[n-1][ngram]/len(self.rlens[0])
     
     # Collect BLEU-relevant statistics for a single hypothesis/reference pair.
     # Return value is a generator yielding:
     # (c, r, numerator1, denominator1, ... numerator4, denominator4)
-    # Summing the columns across calls to this function on an entire corpus will
-    # produce a vector of statistics that can be used to compute BLEU or GLEU
-    def gleu_stats(self,hypothesis, i,version=0):
+    # Summing the columns across calls to this function on an entire corpus 
+    # will produce a vector of statistics that can be used to compute GLEU
+    def gleu_stats(self,hypothesis, i,version=1):
 
       hlen=len(hypothesis)
       rlen = self.rlens[i][0]
 
-      # set the reference length to be the reference length closest to the hyp length 
+      # set the reference length to be the reference length closest to the
+      # length of the hypothesis
       for r in self.rlens[i][1:] :
           if abs(r - hlen) < abs(rlen - hlen) :
               rlen = r
@@ -114,18 +112,9 @@ class GLEU :
             s_ngram_diff = Counter()
             for k in s_ngrams :
                 if k in r_ngrams :
-                    s_ngram_diff[k] = max([0,s_ngrams[k]-r_ngrams[k]*self.normalization(k,n)])
+                    s_ngram_diff[k] = max([0,s_ngrams[k]-r_ngrams[k] * \
+                                           self.normalization(k,n)])
 
-        r_and_h_not_s = 0
-        if version >= 3 :
-            for k in (set(h_ngrams) & set(r_ngrams)) - set(s_ngrams) :
-                r_and_h_not_s += self.normalization(k,n)
-
-        #print 'H',len(h_ngrams),h_ngrams
-        #print 'R',len(r_ngrams),r_ngrams
-        #print 'S',len(s_ngrams),s_ngrams
-        #print 'max [',r_and_h_not_s,'+',sum( (h_ngrams & r_ngrams).values() ),'-',sum( (h_ngrams & s_ngram_diff).values() ),',0 ]',
-        #print '/ max [',r_and_h_not_s,'+',hlen+1-n,',0 ]'
         yield max([ r_and_h_not_s + sum( (h_ngrams & r_ngrams).values() ) - \
                     sum( (h_ngrams & s_ngram_diff).values() ), 0 ])
         
@@ -137,5 +126,6 @@ class GLEU :
        if len(filter(lambda x: x==0, stats)) > 0:
          return 0
        (c, r) = stats[:2]
-       log_gleu_prec = sum([math.log(float(x)/y) for x,y in zip(stats[2::2],stats[3::2])]) / 4.
+       log_gleu_prec = sum([math.log(float(x)/y)
+                            for x,y in zip(stats[2::2],stats[3::2])]) / 4
        return math.exp(min([0, 1-float(r)/c]) + log_gleu_prec)
