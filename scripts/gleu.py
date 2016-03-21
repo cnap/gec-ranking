@@ -17,15 +17,17 @@
 
 import math
 from collections import Counter
-import random
-
-random.seed(9919)
 
 class GLEU :
 
     def __init__(self,n=4) :
         self.order = 4
 
+    def load_hypothesis_sentence(self,hypothesis) :
+        self.hlen = len(hypothesis)
+        self.this_h_ngrams = [ self.get_ngram_counts(hypothesis,n)
+                               for n in range(1,self.order+1) ]
+        
     def load_sources(self,spath) :
         self.all_s_ngrams = [ [ self.get_ngram_counts(line.split(),n)
                                 for n in range(1,self.order+1) ]
@@ -80,9 +82,9 @@ class GLEU :
     # (c, r, numerator1, denominator1, ... numerator4, denominator4)
     # Summing the columns across calls to this function on an entire corpus 
     # will produce a vector of statistics that can be used to compute GLEU
-    def gleu_stats(self,hypothesis, i,version=1):
+    def gleu_stats(self,i,version=1,r_ind=None):
 
-      hlen=len(hypothesis)
+      hlen = self.hlen
       rlen = self.rlens[i][0]
 
       # set the reference length to be the reference length closest to the
@@ -94,18 +96,13 @@ class GLEU :
       yield rlen
       yield hlen
 
-      j = None
-
-      if version == 1 :
-          j = random.randint(0,len(self.rlens[i])-1)
-
       for n in xrange(1,self.order+1):
-        h_ngrams = self.get_ngram_counts(hypothesis,n)
+        h_ngrams = self.this_h_ngrams[n-1]
         s_ngrams = self.all_s_ngrams[i][n-1]
         r_ngrams = self.all_r_ngrams[i][n-1]
 
         if version == 1 :
-            r_ngrams = self.get_ngram_counts(self.refs[i][j],n)
+            r_ngrams = self.get_ngram_counts(self.refs[i][r_ind],n)
 
         s_ngram_diff = self.get_ngram_diff(s_ngrams,r_ngrams)
         if version >= 2 :
