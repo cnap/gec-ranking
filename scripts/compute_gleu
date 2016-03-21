@@ -60,10 +60,14 @@ if __name__ == '__main__' :
                         'using one randomly selected reference each time\n'
                         '\t2: (R^H-S\R_w^H)/(R^H), where R_w is the normalized '
                         'count\n')
+    parser.add_argument('--iter',
+                        type=int,
+                        default=500,
+                        help='the number of iterations to run')
     
     args = parser.parse_args()
 
-    num_iterations = 500 if args.version == 1 else 1
+    num_iterations = args.iter if args.version == 1 else 1
     
     gleu_calculator = GLEU(args.n)
 
@@ -82,8 +86,11 @@ if __name__ == '__main__' :
             print 'SID\tGLEU'
 
         stats = [0 for i in xrange(2*args.n+2)]
-        sent_scores = []
+        
+        iter_scores = []
+        
         for j in range(num_iterations) :
+            iter_stats = [0 for i in xrange(2*args.n+2)]
             if j % 10 == 0 :
                 print >>sys.stderr,'.',
             for i,h in enumerate(hyp):
@@ -93,19 +100,20 @@ if __name__ == '__main__' :
                     #print this_stats
                     print '%d\t%f'%(i,gleu_calculator.gleu(this_stats))
                 stats = [sum(scores) for scores in zip(stats, this_stats)]
-                sent_scores.append(gleu_calculator.gleu(this_stats))
+                iter_stats = [sum(scores) for scores in zip(iter_stats, this_stats)]
+            iter_scores.append(gleu_calculator.gleu(iter_stats))
 
         if args.debug :
             print '\n==== Overall score ====='
         gleu_score = gleu_calculator.gleu(stats)
-        mean = np.mean(sent_scores)
-        std = np.std(sent_scores)
+        mean = np.mean(iter_scores)
+        std = np.std(iter_scores)
         print >>sys.stderr,''
         
         print gleu_score,
         if args.version == 1 :
             ci = scipy.stats.norm.interval(0.05,loc=mean,scale=std)
             print 'Mean=%.3f'%mean,'Std=%.3f'%std,
-            print '95% confidence interval is (%.3f,%.3f)'%(ci[0],ci[1])
+            print '95% confidence interval is','(%.3f,%.3f)'%(ci[0],ci[1])
         else :
             print
