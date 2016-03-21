@@ -117,12 +117,16 @@ if __name__ == '__main__' :
                         
                     iter_stats[j] = [ sum(scores)
                                       for scores in zip(iter_stats[j], this_stats)]
-                    if args.debug :
-                        sent_scores.append(gleu_calculator.gleu(this_stats))
-                        
+                
                 if args.debug :
+                    # sentence-level GLEU is the mean GLEU of the hypothesis compared to
+                    # each reference 
+                    for r in range(len(args.reference)) :
+                        if stats_by_ref[r] is None :
+                            stats_by_ref[r] = [ s for s in gleu_calculator.gleu_stats(
+                                i,r_ind=r,version=args.version) ]
                     print i,
-                    print_gleu_stats(sent_scores)
+                    print_gleu_stats([gleu_calculator.gleu(stats) for stats in stats_by_ref])
 
             if args.debug :
                 print '\n==== Overall score ====='
