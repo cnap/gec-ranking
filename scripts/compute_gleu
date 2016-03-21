@@ -52,7 +52,7 @@ if __name__ == '__main__' :
                         help="Debug; print sentence-level scores",
                         default=False,
                         action="store_true")
-    parser.add_argument('v','--version',
+    parser.add_argument('-v','--version',
                         type=int,
                         default=1,
                         help='which version of GLEU to use.'

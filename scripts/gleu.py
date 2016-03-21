@@ -115,11 +115,11 @@ class GLEU :
                     s_ngram_diff[k] = max([0,s_ngrams[k]-r_ngrams[k] * \
                                            self.normalization(k,n)])
 
-        yield max([ r_and_h_not_s + sum( (h_ngrams & r_ngrams).values() ) - \
+        yield max([ sum( (h_ngrams & r_ngrams).values() ) - \
                     sum( (h_ngrams & s_ngram_diff).values() ), 0 ])
         
         
-        yield max([r_and_h_not_s + hlen+1-n, 0])
+        yield max([hlen+1-n, 0])
 
     # Compute GLEU from collected statistics obtained by call(s) to gleu_stats
     def gleu(self,stats):
