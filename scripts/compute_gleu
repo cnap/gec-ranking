@@ -93,7 +93,8 @@ if __name__ == '__main__' :
         instream = sys.stdin if hpath == '-' else open(hpath)
         hyp = [line.split() for line in instream]
 
-        print os.path.basename(hpath),
+        if not args.debug :
+            print os.path.basename(hpath),
 
         if args.version == 1 :
             # first generate a random list of indices, using a different seed
@@ -144,8 +145,7 @@ if __name__ == '__main__' :
                         if stats_by_ref[r] is None :
                             stats_by_ref[r] = [ s for s in gleu_calculator.gleu_stats(
                                 i,r_ind=r,version=args.version) ]
-                    print i,
-                    print_gleu_stats([gleu_calculator.gleu(stats) for stats in stats_by_ref])
+                    print i,np.mean([gleu_calculator.gleu(stats) for stats in stats_by_ref])
 
             if args.debug :
                 print '\n==== Overall score ====='
