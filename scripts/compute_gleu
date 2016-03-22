@@ -24,9 +24,6 @@ import scipy.stats
 import numpy as np
 import random
 
-random.seed(9919)
-
-
 def print_gleu_stats(scores) :
     mean = np.mean(scores)
     std = np.std(scores)
@@ -74,10 +71,18 @@ if __name__ == '__main__' :
                         type=int,
                         default=500,
                         help='the number of iterations to run')
+    parser.add_argument('--printiter',
+                        default=False,
+                        action='store_true',
+                        help='print detailed information about each iteration')
     
     args = parser.parse_args()
 
     num_iterations = args.iter if args.version == 1 else 1
+
+    # if there is only one reference, just do one iteration
+    if len(args.reference) == 1 :
+        num_iterations = 1
     
     gleu_calculator = GLEU(args.n)
 
@@ -91,6 +96,14 @@ if __name__ == '__main__' :
         print os.path.basename(hpath),
 
         if args.version == 1 :
+            # first generate a random list of indices, using a different seed
+            # for each iteration
+            indices = []
+            for j in range(num_iterations) :
+                random.seed(j*101)
+                indices.append([random.randint(0,len(args.reference)-1)
+                                for i in range(len(hyp))])
+
             if args.debug :
                 print
                 print '===== Sentence-level scores ====='
@@ -100,16 +113,21 @@ if __name__ == '__main__' :
                            for j in range(num_iterations) ]
 
             for i,h in enumerate(hyp) :
+                
                 gleu_calculator.load_hypothesis_sentence(h)
                 # we are going to store the score of this sentence for each ref
                 # so we don't have to recalculate them 500 times
-                sent_scores = []
+                
                 stats_by_ref = [ None for r in range(len(args.reference)) ]
-
+                                
                 for j in range(num_iterations) :
-                    ref = random.randint(0,len(args.reference)-1)
+                    ref = indices[j][i]
                     this_stats = stats_by_ref[ref]
-                    
+
+                    if args.printiter :
+                        ## print out which reference index was chosen
+                        print >>sys.stderr,ref,
+
                     if this_stats is None :
                         this_stats = [ s for s in gleu_calculator.gleu_stats(
                             i,r_ind=ref,version=args.version) ]
@@ -117,7 +135,8 @@ if __name__ == '__main__' :
                         
                     iter_stats[j] = [ sum(scores)
                                       for scores in zip(iter_stats[j], this_stats)]
-                
+                if args.printiter :
+                    print >>sys.stderr,''
                 if args.debug :
                     # sentence-level GLEU is the mean GLEU of the hypothesis compared to
                     # each reference 
@@ -130,6 +149,11 @@ if __name__ == '__main__' :
 
             if args.debug :
                 print '\n==== Overall score ====='
+
+            if args.printiter :
+                # print sufficient statistics and GLEU for each iteration
+                for stats in iter_stats :
+                    print >>sys.stderr,stats,gleu_calculator.gleu(stats)
             print_gleu_stats([gleu_calculator.gleu(stats)
                               for stats in iter_stats ])
                                 

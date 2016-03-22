@@ -87,11 +87,14 @@ class GLEU :
       hlen = self.hlen
       rlen = self.rlens[i][0]
 
-      # set the reference length to be the reference length closest to the
-      # length of the hypothesis
-      for r in self.rlens[i][1:] :
-          if abs(r - hlen) < abs(rlen - hlen) :
-              rlen = r
+      if version == 1 :
+          rlen = self.rlens[i][r_ind]
+      else :
+          # set the reference length to be the reference length closest to the
+          # length of the hypothesis
+          for r in self.rlens[i][1:] :
+              if abs(r - hlen) < abs(rlen - hlen) :
+                  rlen = r
               
       yield rlen
       yield hlen
@@ -99,6 +102,7 @@ class GLEU :
       for n in xrange(1,self.order+1):
         h_ngrams = self.this_h_ngrams[n-1]
         s_ngrams = self.all_s_ngrams[i][n-1]
+        # these are the reference n-grams for version 2
         r_ngrams = self.all_r_ngrams[i][n-1]
 
         if version == 1 :
@@ -113,8 +117,7 @@ class GLEU :
                                            self.normalization(k,n)])
 
         yield max([ sum( (h_ngrams & r_ngrams).values() ) - \
-                    sum( (h_ngrams & s_ngram_diff).values() ), 0 ])
-        
+                    sum( (h_ngrams & s_ngram_diff).values() ), 0 ])      
         
         yield max([hlen+1-n, 0])
 
