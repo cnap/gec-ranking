@@ -29,6 +29,20 @@ Please cite this work when using this data or the GLEU metric.
       url       = {http://www.aclweb.org/anthology/P15-2097}
     }
 
+---
+
+# GLEU
+
+As of May 2, 2016, we have identified a problem with the GLEU metric as the number of references increases. 
+To resolve this issue, we made a minor adjustment to the metric so that it no longer has a tunable weight and is reliable using any number of reference sets.
+The changes to GLEU and updated results are described in [gleu_update_2016.pdf](../gec-ranking/master/gleu_update_2016.pdf)
+
+The update to GLEU is reflected in `scripts/compute_gleu` and `scripts/gleu.py`.
+The original GLEU scripts can be found in `scripts/original_gleu/`.
+We do not recommend using the original GLEU code. The new GLEU should be used instead.
+
+---
+
 ## Instructions
 
 ### 1. Obtain the raw system output
@@ -68,13 +82,12 @@ M2 scores were calculated using the official scorer (3.2) of the CoNLL-2014 Shar
 
 ---
 
-# Important Update
+## Errata
 
-There was an error in the calculation of the GLEU denominator, which was corrected in the 10 March 2016 commit.
-Since then, we have identified a problem with the GLEU metric as the number of references increases. We are currently addressing this issue and will post a thorough explanation as well as revised results from our ACL 2015 paper.
+There was an error in the calculation of the GLEU denominator, which was corrected in the 10 March 2016 commit. 
 
 ---
 
-Please contact Courtney Napoles (<courtneyn@jhu.edu>) with any questions.
+Please contact Courtney Napoles (courtneyn[at]jhu[dot]edu) or Keisuke Sakaguchi (keisuke[at]cs[dot]jhu[dot]edu) with any questions.
 
 Last updated 2 May 2016
