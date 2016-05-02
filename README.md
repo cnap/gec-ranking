@@ -35,7 +35,7 @@ Please cite this work when using this data or the GLEU metric.
 
 As of May 2, 2016, we have identified a problem with the GLEU metric as the number of references increases. 
 To resolve this issue, we made a minor adjustment to the metric so that it no longer has a tunable weight and is reliable using any number of reference sets.
-The changes to GLEU and updated results are described in [gleu_update_2016.pdf](../gec-ranking/master/gleu_update_2016.pdf)
+The changes to GLEU and updated results are described in [gleu_update_2016.pdf](gleu_update_2016.pdf)
 
 The update to GLEU is reflected in `scripts/compute_gleu` and `scripts/gleu.py`.
 The original GLEU scripts can be found in `scripts/original_gleu/`.
