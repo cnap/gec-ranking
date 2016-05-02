@@ -10,7 +10,8 @@
 # 
 # For instructions on how to get the GLEU score, call "compute_gleu -h"
 #
-# Updated 10 March 2016: fixed the denominator of the modified precision
+# Updated 2 May 2016: This is an updated version of GLEU that has been
+# modified to handle multiple references more fairly.
 #
 # This script was adapted from bleu.py by Adam Lopez.
 # <https://github.com/alopez/en600.468/blob/master/reranker/>
@@ -81,39 +82,20 @@ class GLEU :
     # (c, r, numerator1, denominator1, ... numerator4, denominator4)
     # Summing the columns across calls to this function on an entire corpus
     # will produce a vector of statistics that can be used to compute GLEU
-    def gleu_stats(self,i,version=1,r_ind=None):
+    def gleu_stats(self,i,r_ind=None):
 
       hlen = self.hlen
-      rlen = self.rlens[i][0]
-
-      if version == 1 :
-          rlen = self.rlens[i][r_ind]
-      else :
-          # set the reference length to be the reference length closest to the
-          # length of the hypothesis
-          for r in self.rlens[i][1:] :
-              if abs(r - hlen) < abs(rlen - hlen) :
-                  rlen = r
-
+      rlen = self.rlens[i][r_ind]
+      
       yield rlen
       yield hlen
 
       for n in xrange(1,self.order+1):
         h_ngrams = self.this_h_ngrams[n-1]
         s_ngrams = self.all_s_ngrams[i][n-1]
-        # these are the reference n-grams for version 2
-        r_ngrams = self.all_r_ngrams[i][n-1]
-
-        if version == 1 :
-            r_ngrams = self.get_ngram_counts(self.refs[i][r_ind],n)
+        r_ngrams = self.get_ngram_counts(self.refs[i][r_ind],n)
 
         s_ngram_diff = self.get_ngram_diff(s_ngrams,r_ngrams)
-        if version >= 2 :
-            s_ngram_diff = Counter()
-            for k in s_ngrams :
-                if k in r_ngrams :
-                    s_ngram_diff[k] = max([0,s_ngrams[k]-r_ngrams[k] * \
-                                           self.normalization(k,n)])
 
         yield max([ sum( (h_ngrams & r_ngrams).values() ) - \
                     sum( (h_ngrams & s_ngram_diff).values() ), 0 ])
@@ -122,6 +104,7 @@ class GLEU :
 
     # Compute GLEU from collected statistics obtained by call(s) to gleu_stats
     def gleu(self,stats,smooth=False):
+        # smooth 0 counts for sentence-level scores
         if smooth :
             stats = [ s if s != 0 else 1 for s in stats ]
         if len(filter(lambda x: x==0, stats)) > 0:
