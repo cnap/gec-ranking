@@ -10,10 +10,11 @@
 # 
 # For instructions on how to get the GLEU score, call "compute_gleu -h"
 #
-# Updated 10 March 2016: fixed the denominator of the modified precision
-#
 # This script was adapted from bleu.py by Adam Lopez.
 # <https://github.com/alopez/en600.468/blob/master/reranker/>
+#
+# THIS IS AN OLD VERSION OF GLEU. Please see the repository for the correct,
+# new version (https://github.com/cnap/gec-ranking)
 
 import math
 from collections import Counter
