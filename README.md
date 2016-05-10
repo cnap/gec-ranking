@@ -8,12 +8,10 @@ human rankings of the CoNLL-14 Shared Task system output as well as
 scripts to evaluate the rankings to extract an absolute system
 ranking.
 
-These results were described in our ACL 2015 paper:
+These results were described in the ACL 2015 paper:
 
-> Courtney Napoles, Keisuke Sakaguchi, Joel Tetreault, and Matt
-Post. 2015. Ground Truth for Grammatical Error Correction
-Metrics. In *Proc. of the 53rd Annual Meeting of the Association
-for Computational Linguistics*, pages 588-593. ACL.  ([pdf](http://www.aclweb.org/anthology/P/P15/P15-2097.pdf))
+> [*Ground Truth for Grammatical Error Correction Metrics*](http://www.aclweb.org/anthology/P/P15/P15-2097.pdf)
+by Courtney Napoles, Keisuke Sakaguchi, Joel Tetreault, and Matt Post
 
 Please cite this work when using this data or the GLEU metric.
 
@@ -31,15 +29,24 @@ Please cite this work when using this data or the GLEU metric.
 
 ---
 
-# GLEU
+# GLEU Update
 
 As of May 2, 2016, we have identified a problem with the GLEU metric as the number of references increases. 
 To resolve this issue, we made a minor adjustment to the metric so that it no longer has a tunable weight and is reliable using any number of reference sets.
-The changes to GLEU and updated results are described in [gleu_update_2016.pdf](gleu_update_2016.pdf)
-
-The update to GLEU is reflected in `scripts/compute_gleu` and `scripts/gleu.py`.
+This update to GLEU is reflected in `scripts/compute_gleu` and `scripts/gleu.py`.
 The original GLEU scripts can be found in `scripts/original_gleu/`.
 We do not recommend using the original GLEU code. The new GLEU should be used instead.
+
+The changes to GLEU and updated results to our ACL 2015 paper are described in the eprint, [*GLEU Without Tuning*](http://arxiv.org/abs/1605.02592).
+The citation for the updated metric is
+
+    @Article{napoles2016gleu,
+      author    = {Napoles, Courtney  and  Sakaguchi, Keisuke  and  Post, Matt  and  Tetreault, Joel},
+      title     = {{GLEU} Without Tuning},
+      journal   = {eprint arXiv:1605.02592 [cs.CL]},
+      year      = {2016},
+      url       = {http://arxiv.org/abs/1605.02592}
+    }
 
 ---
 
@@ -90,4 +97,4 @@ There was an error in the calculation of the GLEU denominator, which was correct
 
 Please contact Courtney Napoles (courtneyn[at]jhu[dot]edu) or Keisuke Sakaguchi (keisuke[at]cs[dot]jhu[dot]edu) with any questions.
 
-Last updated 2 May 2016
+Last updated 10 May 2016
