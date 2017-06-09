@@ -1,5 +1,5 @@
 # Courtney Napoles
-# <courtneyn@jhu.edu>
+# <napoles@cs.jhu.edu>
 # 21 June 2015
 # ##
 # gleu.py
@@ -13,6 +13,8 @@
 # Updated 2 May 2016: This is an updated version of GLEU that has been
 # modified to handle multiple references more fairly.
 #
+# Updated 6 9 2017: Fixed inverse brevity penalty
+# 
 # This script was adapted from bleu.py by Adam Lopez.
 # <https://github.com/alopez/en600.468/blob/master/reranker/>
 
@@ -87,8 +89,8 @@ class GLEU :
       hlen = self.hlen
       rlen = self.rlens[i][r_ind]
       
-      yield rlen
       yield hlen
+      yield rlen
 
       for n in xrange(1,self.order+1):
         h_ngrams = self.this_h_ngrams[n-1]
